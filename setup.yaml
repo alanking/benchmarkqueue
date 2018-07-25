@@ -3,9 +3,14 @@
 # [rabbitmq]
 # rabbitmq host
 #
+# [rabbitmq:vars]
+# redis_host=<redis host url>
+#
 # [celery]
 # celery worker host
 #
+# [celery:vars]
+# celery_broker_url=<rabbitmq host url>
 # ansible-playbook -i hosts -u <user_name> setup.yaml
 
 ---
@@ -24,8 +29,9 @@
       - python-virtualenv
       - git
       - redis
+      - python34-devel
 
-# after install, change /etc/redis.conf to bind ip, open firewall
+# after install open firewall
 #
 # sudo iptables -A INPUT -p tcp --dport 6379 -s xxx.xxx.xxx.xxx -j ACCEPT
 # sudo iptables -A INPUT -p tcp --dport 6379 -j DROP
@@ -42,10 +48,20 @@
       packages:
       - rabbitmq-server
       - redis
+  - name: Modify redis configuration
+    lineinfile:
+      path: /etc/redis.conf
+      regexp: "^bind 127[.]0[.]0[.]1"
+      line: "bind 127.0.0.1 {{ redis_host }}"
+      
   - name: Start redis service
     service:
       name: redis
       state: restarted
+  - name: Start rabbitmq service
+    service:
+      name: rabbitmq-server
+      state: started
 
 - hosts: celery
   user: xuhao
@@ -55,16 +71,25 @@
       - progressbar2
       - python-redis-lock
       - python-irodsclient
+      - structlog
+      - scandir
     venv_path: "~/venv"
     repo_dir: "~/icai"
   tasks:
   - name: Clone repository
     git:	
       repo: "https://github.com/irods/irods_capability_automated_ingest"
-      version: master
+      version: icai-celery
       dest: "{{repo_dir}}"
   - name: Install python dependencies
     pip:
       name: "{{ python_packages }}"
       virtualenv: "{{venv_path}}"
-#  - name: Start celery worker
+      virtualenv_python: python3.4
+  - name: Start celery worker
+    shell:
+      cmd: |
+        source {{venv_path}}/bin/activate
+        CELERY_BROKER_URL={{ celery_broker_url }} celery multi start worker1 -A irods_capability_automated_ingest.sync_task worker -l error -Q restart,path,file
+      chdir: "{{repo_dir}}"
+      
