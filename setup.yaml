@@ -5,6 +5,7 @@
 #
 # [rabbitmq:vars]
 # redis_host=<redis host url>
+# subnet_mask=<subnet mask for allowed sources>
 #
 # [celery]
 # celery worker host
@@ -40,6 +41,12 @@
   become: yes
   become_user: root
   tasks:
+  - name: set up firewall
+    firewalld: 
+      source: "{{ subnet_mask }}"
+      port: 6379/tcp
+      permanent: true
+      state: enabled
   - name: Install irods, rabbitmq, and redis dependencies
     yum:
       name: "{{ packages }}"
