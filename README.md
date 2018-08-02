@@ -1,3 +1,5 @@
+## how to run `no_op.py`
+
 ### install ansible
 
 ### install python3 (any version should work)
@@ -10,14 +12,14 @@ in `hosts`
 
 ```
 [rabbitmq]
-rabbitmq host
+rabbitmq host ip
 
 [rabbitmq:vars]
 redis_host=<redis host url>
 subnet_mask=<subnet mask for allowed sources>
 
 [celery]
-celery worker host
+celery worker host ip
 
 [celery:vars]
 celery_broker_url=<rabbitmq host url>
@@ -27,7 +29,8 @@ celery_broker_url=<rabbitmq host url>
 
 `<rabbitmq host url>` should have format `pyamqp://guest@host[:port]//`
 
-There can be multiple celere worker hosts
+There can be multiple celery worker host ips.
+
 ### run playbook
 ```
 ansible-playbook -i hosts -u <user_name> no_op.yaml
@@ -45,11 +48,6 @@ pip install redis celery
 ```
 
 ### clone this repo
-after cloning
-
-```
-cd <repo>
-```
 
 ### set env
 ```
@@ -58,6 +56,7 @@ export CELERY_BROKER_URL=<rabbitmq host url>
 
 ### run test
 ```
+cd <repo>
 python run.py <redis_host> <redis_port> <redis_db> <number tasks>
 ```
 
