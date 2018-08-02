@@ -1,4 +1,4 @@
-from benchmarkutils import enqueue
+from tasks import enqueue
 import sys
 
 n = int(sys.argv[1])

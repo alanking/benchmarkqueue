@@ -96,8 +96,9 @@
   - name: Start celery worker
     shell:
       cmd: |
+        echo err > /tmp/err.log
         source {{venv_path}}/bin/activate
         CELERY_BROKER_URL={{ celery_broker_url }} celery multi stop worker1
-        CELERY_BROKER_URL={{ celery_broker_url }} celery multi start worker1 -A benchmark worker -l error
+        CELERY_BROKER_URL={{ celery_broker_url }} celery multi start worker1 -A tasks -l error
       chdir: "{{repo_dir}}"
       
