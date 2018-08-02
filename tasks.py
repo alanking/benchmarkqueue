@@ -1,13 +1,21 @@
 from celery import Celery
+from redis import StrictRedis
+import time
 
 app = Celery('tasks')
 
 @app.task
-def no_op():
-    pass
+def no_op(host,port,db):
+    r = StrictRedis(host=host, port=port, db=db)
+    i = r.decr("countdown")
+    if i == 0:
+        r.set("finish", time.time())
 
 @app.task
-def enqueue(n):
+def enqueue(host,port,db,n):
+    r = StrictRedis(host=host, port=port, db=db)
+    r.set("start", time.time())
+    r.set("countdown", n)
     for i in range(n):
-        no_op.s().apply_async()
+        no_op.s(host,port,db).apply_async()
     
