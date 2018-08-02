@@ -7,7 +7,7 @@ app = Celery('tasks')
 r = None
 
 @app.task
-def no_op():
+def no_op(host,port,db):
     global r
     if r is None:
         r = StrictRedis(host=host, port=port, db=db)
@@ -23,5 +23,5 @@ def enqueue(host,port,db,n):
     r.set("start", time.time())
     r.set("countdown", n)
     for i in range(n):
-        no_op.s().apply_async()
+        no_op.s(host,port,db).apply_async()
     
