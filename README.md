@@ -23,6 +23,11 @@ celery worker host
 celery_broker_url=<rabbitmq host url>
 ```
 
+`<subnet mask for allowed sources>` should have format `ip/number`
+
+`<rabbitmq host url>` should have format `pyamqp://guest@host[:port]//`
+
+There can be multiple celere worker hosts
 ### run playbook
 ```
 ansible-playbook -i hosts -u <user_name> no_op.yaml
