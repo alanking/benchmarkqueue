@@ -81,7 +81,7 @@
       - structlog
       - scandir
     venv_path: "~/venv"
-    repo_dir: "~/icai"
+    repo_dir: "~/benchmarkqueue"
   tasks:
   - name: Clone repository
     git:	
