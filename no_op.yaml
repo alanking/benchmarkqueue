@@ -96,9 +96,9 @@
   - name: Start celery worker
     shell:
       cmd: |
-        echo err > /tmp/err.log
         source {{venv_path}}/bin/activate
-        {ps auxww | grep 'celery worker' | awk '{print $2}' | xargs kill -9} || true
-        CELERY_BROKER_URL={{ celery_broker_url }} celery multi start worker1 -A tasks -l error
+        export CELERY_BROKER_URL={{ celery_broker_url }}
+        celery multi stop worker1 --pidfile=%n.pid
+        celery multi start worker1 -A tasks -l error
       chdir: "{{repo_dir}}"
       
