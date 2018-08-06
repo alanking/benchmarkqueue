@@ -12,7 +12,10 @@
 #
 # [celery:vars]
 # celery_broker_url=<rabbitmq host url>
-# ansible-playbook -i hosts -u <user_name> setup.yaml
+# user=<username>
+#
+# To run with ansible:
+# ansible-playbook -i hosts -u <user_name> celery_redis.yaml
 
 ---
 - hosts: celery
@@ -85,7 +88,7 @@
   tasks:
   - name: Clone repository
     git:	
-      repo: "https://github.com/xu-hao/benchmarkqueue"
+      repo: "https://github.com/jaking92/benchmarkqueue"
       version: master
       dest: "{{repo_dir}}"
   - name: Install python dependencies
