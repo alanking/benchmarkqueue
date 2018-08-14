@@ -1,0 +1,105 @@
+# in hosts file
+#
+# [rabbitmq]
+# rabbitmq host
+#
+# [rabbitmq:vars]
+# redis_host=<redis host url>
+# subnet_mask=<subnet mask for allowed sources>
+#
+# [celery]
+# celery worker host
+#
+# [celery:vars]
+# celery_broker_url=<rabbitmq host url>
+# user=<username>
+#
+# To run with ansible:
+# ansible-playbook -i hosts -u <user_name> celery_redis.yaml
+
+---
+- hosts: celery
+  become: yes
+  become_user: root
+  tasks:
+  - name: Install celery worker dependencies
+    yum:
+      name: "{{ packages }}"
+      update_cache: yes
+    vars:
+      packages:
+      - python34
+      - python34-pip
+      - python-virtualenv
+      - git
+      - redis
+      - python34-devel
+
+# after install open firewall
+#
+# sudo iptables -A INPUT -p tcp --dport 6379 -s xxx.xxx.xxx.xxx -j ACCEPT
+# sudo iptables -A INPUT -p tcp --dport 6379 -j DROP
+
+- hosts: rabbitmq
+  become: yes
+  become_user: root
+  tasks:
+  - name: set up firewall
+    firewalld: 
+      source: "{{ subnet_mask }}"
+      port: 6379/tcp
+      permanent: true
+      state: enabled
+  - name: Install irods, rabbitmq, and redis dependencies
+    yum:
+      name: "{{ packages }}"
+      update_cache: yes
+    vars:
+      packages:
+      - rabbitmq-server
+      - redis
+  - name: Modify redis configuration
+    lineinfile:
+      path: /etc/redis.conf
+      regexp: "^bind 127[.]0[.]0[.]1"
+      line: "bind 127.0.0.1 {{ redis_host }}"
+      
+  - name: Start redis service
+    service:
+      name: redis
+      state: restarted
+  - name: Start rabbitmq service
+    service:
+      name: rabbitmq-server
+      state: started
+
+- hosts: celery
+  user: "{{ user }}"
+  vars:
+    python_packages:
+      - rq
+      - progressbar2
+      - python-redis-lock
+      - python-irodsclient
+      - structlog
+      - scandir
+    venv_path: "~/venv"
+    repo_dir: "~/benchmarkqueue"
+  tasks:
+  - name: Clone repository
+    git:	
+      repo: "https://github.com/jaking92/benchmarkqueue"
+      version: master
+      dest: "{{repo_dir}}"
+  - name: Install python dependencies
+    pip:
+      name: "{{ python_packages }}"
+      virtualenv: "{{venv_path}}"
+      virtualenv_python: python3.4
+  - name: Start celery worker
+    shell:
+      cmd: |
+        source {{venv_path}}/bin/activate
+        rq worker
+      chdir: "{{repo_dir}}/rq_redis"
+      
