@@ -88,7 +88,7 @@
   tasks:
   - name: Clone repository
     git:	
-      repo: "https://github.com/jaking92/benchmarkqueue"
+      repo: "https://github.com/alanking/benchmarkqueue"
       version: master
       dest: "{{repo_dir}}"
   - name: Install python dependencies
@@ -103,5 +103,5 @@
         export CELERY_BROKER_URL={{ celery_broker_url }}
         celery multi stop worker1 --pidfile=%n.pid
         celery multi start worker1 -A tasks -l error
-      chdir: "{{repo_dir}}"
+      chdir: "{{repo_dir}}/celery_redis"
       
